@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Budget Control - Pernikahan</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        primary: { 50:'#ecfdf5', 100:'#d1fae5', 200:'#a7f3d0', 300:'#6ee7b7', 400:'#34d399', 500:'#10b981', 600:'#059669', 700:'#047857', 800:'#065f46', 900:'#064e3b' },
+      }
+    }
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f0fdf4; }
+  .header-logo-icon { width: 48px; height: 48px; background: linear-gradient(135deg, #059669 0%, #047857 100%); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25); }
+  .nav-tabs-wrapper { position: relative; }
+  .nav-tab { position: relative; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; color: #047857; background: white; border: 1.5px solid #d1fae5; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap; user-select: none; }
+  .nav-tab:hover { background: #ecfdf5; border-color: #6ee7b7; transform: translateY(-1px); }
+  .nav-tab.active { background: #059669; color: white; border-color: #059669; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3); }
+  .nav-tab.active:hover { background: #047857; border-color: #047857; }
+  .nav-tab svg { width: 1.1rem; height: 1.1rem; flex-shrink: 0; }
+  .nav-indicator { position: absolute; bottom: -6px; height: 4px; background: #059669; border-radius: 2px; transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+  .card { background: white; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03); }
+  .badge-lunas { background: #d1fae5; color: #065f46; }
+  .badge-belum { background: #fef3c7; color: #92400e; }
+  .progress-bar { transition: width 0.5s ease; }
+  .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+  .timeline-item { position: relative; padding-left: 28px; }
+  .timeline-item::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: -16px; width: 2px; background: #d1fae5; }
+  .timeline-item:last-child::before { display: none; }
+  .timeline-dot { position: absolute; left: 0; top: 6px; width: 18px; height: 18px; border-radius: 50%; background: #059669; border: 3px solid #d1fae5; }
+  input:focus, select:focus, textarea:focus { outline: none; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); border-color: #10b981; }
+  .btn-primary { background: #059669; color: white; transition: all 0.2s; }
+  .btn-primary:hover { background: #047857; }
+  .btn-secondary { background: white; color: #065f46; border: 1px solid #d1fae5; }
+  .btn-secondary:hover { background: #ecfdf5; }
+  table tbody tr:hover { background: #f0fdf4; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #f1f5f9; }
+  ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 4px; }
+  .tab-content { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .rundown-card { transition: all 0.2s; }
+  .rundown-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(5, 150, 105, 0.1); }
+  .drag-handle { cursor: grab; }
+  .drag-handle:active { cursor: grabbing; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="bg-white border-b border-primary-100 sticky top-0 z-30">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="header-logo-icon">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-lg sm:text-2xl font-extrabold text-gray-900 tracking-tight">Budget Control</h1>
+        <p class="text-[10px] sm:text-xs text-gray-500 font-medium">Pernikahan • Dashboard</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="exportExcel()" class="flex flex-col items-center justify-center px-2.5 py-1.5 rounded-xl border-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 transition-all active:scale-95" title="Export Excel">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span class="text-[10px] font-bold text-emerald-700 mt-0.5 leading-none">Excel</span>
+      </button>
+      <button onclick="exportPDF()" class="flex flex-col items-center justify-center px-2.5 py-1.5 rounded-xl border-2 border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-400 transition-all active:scale-95" title="Export PDF">
+        <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        <span class="text-[10px] font-bold text-red-700 mt-0.5 leading-none">PDF</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="max-w-7xl mx-auto px-4 sm:px-6 pt-5 pb-2">
+  <div class="nav-tabs-wrapper flex gap-2 sm:gap-3 overflow-x-auto pb-3" id="nav-tabs">
+    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="nav-tab active">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+      Dashboard
+    </button>
+    <button onclick="switchTab('budgeting')" id="tab-budgeting" class="nav-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+      Budgeting
+    </button>
+    <button onclick="switchTab('prewed')" id="tab-prewed" class="nav-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Prewed
+    </button>
+    <button onclick="switchTab('rundown')" id="tab-rundown" class="nav-tab">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Rundown Akad
+    </button>
+    <div class="nav-indicator" id="nav-indicator"></div>
+  </div>
+</nav>
+
+<main class="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+
+<!-- DASHBOARD -->
+<section id="section-dashboard" class="tab-content">
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="card p-5">
+      <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center mb-3">
+        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-xs text-gray-500 mb-1">Total Plan</p>
+      <p class="text-xl font-bold text-gray-900" id="sum-budget">Rp 0</p>
+    </div>
+    <div class="card p-5">
+      <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+      </div>
+      <p class="text-xs text-gray-500 mb-1">Total DP</p>
+      <p class="text-xl font-bold text-gray-900" id="sum-dp">Rp 0</p>
+    </div>
+    <div class="card p-5">
+      <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mb-3">
+        <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-xs text-gray-500 mb-1">Total Kurang</p>
+      <p class="text-xl font-bold text-gray-900" id="sum-kurang">Rp 0</p>
+    </div>
+    <div class="card p-5">
+      <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center mb-3">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <p class="text-xs text-gray-500 mb-1">Total Lunas</p>
+      <p class="text-xl font-bold text-gray-900" id="sum-lunas">Rp 0</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+    <div class="card p-5 lg:col-span-2">
+      <h3 class="font-semibold text-gray-900 mb-4">Budget per Kategori</h3>
+      <div style="height: 300px;"><canvas id="chartCategory"></canvas></div>
+    </div>
+    <div class="card p-5">
+      <h3 class="font-semibold text-gray-900 mb-4">Status Pembayaran</h3>
+      <div style="height: 300px;"><canvas id="chartStatus"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card p-5 mb-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-900">Progress per Kategori</h3>
+      <span class="text-xs text-gray-500" id="total-items-count">0 items</span>
+    </div>
+    <div id="kategori-progress" class="space-y-4"></div>
+  </div>
+
+  <div class="card p-5">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="font-semibold text-gray-900">Item Terbaru</h3>
+      <button onclick="switchTab('budgeting')" class="text-sm text-primary-600 hover:text-primary-700 font-medium">Lihat semua →</button>
+    </div>
+    <div id="recent-items" class="divide-y divide-gray-100"></div>
+  </div>
+</section>
+
+<!-- BUDGETING -->
+<section id="section-budgeting" class="hidden tab-content">
+  <div class="card p-5 mb-4">
+    <div class="flex flex-col lg:flex-row gap-3">
+      <div class="flex-1 relative">
+        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="search-budget" placeholder="Cari item..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm" oninput="renderBudgetTable()">
+      </div>
+      <select id="filter-kategori-budget" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white" onchange="renderBudgetTable()">
+        <option value="">Semua Kategori</option>
+        <option value="VENUE">Venue</option>
+        <option value="OUTFIT">Outfit</option>
+        <option value="VENDOR">Vendor</option>
+        <option value="PENGISI ACARA">Pengisi Acara</option>
+        <option value="HANTARAN">Hantaran</option>
+        <option value="LAIN-LAIN">Lain-lain</option>
+      </select>
+      <select id="filter-status-budget" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white" onchange="renderBudgetTable()">
+        <option value="">Semua Status</option>
+        <option value="LUNAS">Lunas</option>
+        <option value="BELUM">Belum Lunas</option>
+      </select>
+      <button onclick="openModal('budget')" class="btn-primary px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Tambah
+      </button>
+    </div>
+  </div>
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-primary-50 text-primary-900">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold">No</th>
+            <th class="px-4 py-3 text-left font-semibold">Kategori</th>
+            <th class="px-4 py-3 text-left font-semibold">Detail</th>
+            <th class="px-4 py-3 text-right font-semibold">Plan</th>
+            <th class="px-4 py-3 text-right font-semibold">DP</th>
+            <th class="px-4 py-3 text-right font-semibold">Kurang</th>
+            <th class="px-4 py-3 text-left font-semibold">Status</th>
+            <th class="px-4 py-3 text-left font-semibold">Keterangan</th>
+            <th class="px-4 py-3 text-center font-semibold">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="budget-table-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- PREWED -->
+<section id="section-prewed" class="hidden tab-content">
+  <div class="card p-5 mb-4">
+    <div class="flex flex-col lg:flex-row gap-3">
+      <div class="flex-1 relative">
+        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="search-prewed" placeholder="Cari item prewed..." class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm" oninput="renderPrewedTable()">
+      </div>
+      <select id="filter-kategori-prewed" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white" onchange="renderPrewedTable()">
+        <option value="">Semua Kategori</option>
+        <option value="VENUE & VENDOR">Venue & Vendor</option>
+        <option value="OUTFIT PREWED">Outfit Prewed</option>
+        <option value="LAIN-LAIN">Lain-lain</option>
+      </select>
+      <select id="filter-status-prewed" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white" onchange="renderPrewedTable()">
+        <option value="">Semua Status</option>
+        <option value="FIX">Fix</option>
+        <option value="Belum FIX">Belum Fix</option>
+      </select>
+      <button onclick="openModal('prewed')" class="btn-primary px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 whitespace-nowrap">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        Tambah
+      </button>
+    </div>
+  </div>
+  <div class="card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-primary-50 text-primary-900">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold">No</th>
+            <th class="px-4 py-3 text-left font-semibold">Kategori</th>
+            <th class="px-4 py-3 text-left font-semibold">Detail</th>
+            <th class="px-4 py-3 text-left font-semibold">Status</th>
+            <th class="px-4 py-3 text-right font-semibold">Plan</th>
+            <th class="px-4 py-3 text-right font-semibold">DP</th>
+            <th class="px-4 py-3 text-right font-semibold">Kurang</th>
+            <th class="px-4 py-3 text-left font-semibold">Keterangan</th>
+            <th class="px-4 py-3 text-center font-semibold">Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="prewed-table-body" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- RUNDOWN - WITH CRUD -->
+<section id="section-rundown" class="hidden tab-content">
+  <div class="card p-6 mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-gray-900">Susunan Acara Akad</h2>
+          <p class="text-sm text-gray-500"><span id="rundown-count">0</span> item acara • Klik untuk edit</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="resetRundown()" class="btn-secondary px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2" title="Reset ke data awal">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Reset
+        </button>
+        <button onclick="openModal('rundown')" class="btn-primary px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Tambah Acara
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="rundown-list" class="space-y-3"></div>
+
+  <!-- Empty State -->
+  <div id="rundown-empty" class="hidden card p-12 text-center">
+    <div class="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    </div>
+    <h3 class="text-lg font-semibold text-gray-900 mb-2">Belum ada acara</h3>
+    <p class="text-sm text-gray-500 mb-4">Mulai tambahkan susunan acara akad Anda</p>
+    <button onclick="openModal('rundown')" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">Tambah Acara Pertama</button>
+  </div>
+</section>
+
+</main>
+
+<!-- MODAL BUDGET/PREWED -->
+<div id="modal" class="fixed inset-0 z-50 hidden">
+  <div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+    <div class="card w-full max-w-2xl max-h-[90vh] overflow-y-auto pointer-events-auto">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+        <h3 class="text-lg font-bold text-gray-900" id="modal-title">Tambah Item</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="modal-form" class="p-6 space-y-4" onsubmit="saveItem(event)">
+        <input type="hidden" id="item-id">
+        <input type="hidden" id="item-type">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kategori</label>
+            <select id="item-kategori" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" required></select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Detail</label>
+            <input type="text" id="item-detail" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" required>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Plan (Rp)</label>
+            <input type="number" id="item-plan" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" min="0" value="0">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">DP (Rp)</label>
+            <input type="number" id="item-dp" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" min="0" value="0">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Kurang (Rp)</label>
+            <input type="number" id="item-kurang" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" min="0" value="0">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="item-status" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" required></select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan</label>
+          <textarea id="item-keterangan" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModal()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">Batal</button>
+          <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RUNDOWN -->
+<div id="modal-rundown" class="fixed inset-0 z-50 hidden">
+  <div class="modal-overlay absolute inset-0" onclick="closeModalRundown()"></div>
+  <div class="absolute inset-0 flex items-center justify-center p-4 pointer-events-none">
+    <div class="card w-full max-w-lg pointer-events-auto">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white">
+        <h3 class="text-lg font-bold text-gray-900" id="modal-rundown-title">Tambah Acara</h3>
+        <button onclick="closeModalRundown()" class="text-gray-400 hover:text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <form id="modal-rundown-form" class="p-6 space-y-4" onsubmit="saveRundownItem(event)">
+        <input type="hidden" id="rundown-item-id">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Jam / Waktu <span class="text-red-500">*</span></label>
+          <input type="text" id="rundown-jam" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Contoh: 08.00 - 08.30" required>
+          <p class="text-xs text-gray-500 mt-1">Format: "08.00 - 08.30" atau "- 06.30"</p>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Acara <span class="text-red-500">*</span></label>
+          <textarea id="rundown-acara" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Deskripsi acara..." required></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Keterangan (opsional)</label>
+          <input type="text" id="rundown-keterangan" class="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Catatan tambahan...">
+        </div>
+        <div class="flex justify-end gap-2 pt-4 border-t border-gray-100">
+          <button type="button" onclick="closeModalRundown()" class="btn-secondary px-4 py-2 rounded-lg text-sm font-medium">Batal</button>
+          <button type="submit" class="btn-primary px-4 py-2 rounded-lg text-sm font-medium">Simpan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const defaultBudget = [
+  {id:1,kategori:'VENUE',detail:'Venue',status:'LUNAS',plan:3558000,dp:500000,kurang:3058000,keterangan:'Gedung Korpri - DP 500 rb - Potongan 10% + kamar VIP (180k) 2 hari + 2 kamar biasa (2 hr)'},
+  {id:2,kategori:'OUTFIT',detail:'Baju Pria (Akad & Resepsi)',status:'LUNAS',plan:3700000,dp:1500000,kurang:2200000,keterangan:'Alfath - DP 1,5 jt - Fitting H-3 bulan dan H-2 minggu - Baju akad bapak - Teratai'},
+  {id:3,kategori:'OUTFIT',detail:'Baju Perempuan (Akad & Resepsi)',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Alfath'},
+  {id:4,kategori:'OUTFIT',detail:'Baju Orang Tua Resepsi',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Alfath'},
+  {id:5,kategori:'OUTFIT',detail:'Baju Orang Tua Akad',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Alfath'},
+  {id:6,kategori:'OUTFIT',detail:'Sepatu Pria Akad & Resepsi',status:'LUNAS',plan:234500,dp:234500,kurang:0,keterangan:'Buccheri'},
+  {id:7,kategori:'OUTFIT',detail:'Sepatu Perempuan Akad',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'TikTok'},
+  {id:8,kategori:'OUTFIT',detail:'Sepatu Perempuan Resepsi',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'TikTok'},
+  {id:9,kategori:'OUTFIT',detail:'Baju Saudara',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:10,kategori:'OUTFIT',detail:'Baju Seragam Keluarga',status:'LUNAS',plan:1050000,dp:550000,kurang:500000,keterangan:'Nusa Indah'},
+  {id:11,kategori:'OUTFIT',detail:'Baju Seragam Keluarga (pria)',status:'LUNAS',plan:910000,dp:910000,kurang:0,keterangan:'Nusa Indah'},
+  {id:12,kategori:'VENDOR',detail:'Makanan',status:'BELUM',plan:30000000,dp:0,kurang:30000000,keterangan:'Akad (200 nasi) - Resepsi (800 nasi, 600 sate, 400 bakso)'},
+  {id:13,kategori:'VENDOR',detail:'MUA',status:'LUNAS',plan:7000000,dp:3500000,kurang:3500000,keterangan:'Nurbah Hamid - DP 50%'},
+  {id:14,kategori:'VENDOR',detail:'Dekorasi',status:'LUNAS',plan:14000000,dp:7000000,kurang:7000000,keterangan:'Titin Rias (Dekorasi) - DP 7 JT (50%)'},
+  {id:15,kategori:'VENDOR',detail:'Fotografer',status:'LUNAS',plan:5500000,dp:500000,kurang:5000000,keterangan:'Rizqi Perdana - DP 500rb'},
+  {id:16,kategori:'VENDOR',detail:'Kotak Hantaran',status:'LUNAS',plan:700000,dp:0,kurang:700000,keterangan:'Jihan Box - Jihan 764 (kode booking) - 20 BOX + 1 Ring Box - Hias Bedcover (10k) - Biaya tambahan jemput (50k)'},
+  {id:17,kategori:'VENDOR',detail:'Cincin Mahar',status:'LUNAS',plan:4352500,dp:3300000,kurang:1052500,keterangan:'Ube'},
+  {id:18,kategori:'VENDOR',detail:'Henna',status:'LUNAS',plan:300000,dp:100000,kurang:200000,keterangan:'Dinny Henna - Henna merah - DP 100 rb'},
+  {id:19,kategori:'VENDOR',detail:'Wedding Organizer',status:'LUNAS',plan:5500000,dp:3250000,kurang:2250000,keterangan:'5.5jt, Hampers vendor (192.500), Kebutuhan pengantin (3.248.100)'},
+  {id:20,kategori:'VENDOR',detail:'Personil Angkat Piring',status:'LUNAS',plan:1030000,dp:515000,kurang:515000,keterangan:'Frans Service - DP 50% (515 rb), Pelunasan setelah acara - 3 orang (akad-resepsi) - 5 orang (resepsi)'},
+  {id:21,kategori:'VENDOR',detail:'Betangas',status:'LUNAS',plan:650000,dp:100000,kurang:550000,keterangan:'Rintis Betangas - DP 100 rb - Paket CPW & CPP utk 2 hari sebelum H'},
+  {id:22,kategori:'VENDOR',detail:'Kipas Uap',status:'LUNAS',plan:1000000,dp:100000,kurang:900000,keterangan:'Raja Kipas Uap - DP 100 rb - 4 kipas uap'},
+  {id:23,kategori:'VENDOR',detail:'Undangan & Tag Souvernir',status:'LUNAS',plan:625000,dp:550000,kurang:75000,keterangan:'Undangan 500 + 2 buku tamu (50rb) - Tambahan undangan 50 pcs + charge plastik'},
+  {id:24,kategori:'VENDOR',detail:'TAR',status:'LUNAS',plan:1300000,dp:500000,kurang:800000,keterangan:'Tar Sumber Rejeki - 3 orang personil + 1 sopir'},
+  {id:25,kategori:'VENDOR',detail:'Qoriah',status:'LUNAS',plan:400000,dp:0,kurang:400000,keterangan:'Sudah di chat pribadi'},
+  {id:26,kategori:'VENDOR',detail:'KUA',status:'LUNAS',plan:600000,dp:0,kurang:600000,keterangan:'Sudah ada billing'},
+  {id:27,kategori:'VENDOR',detail:'Genset/Orang PLN',status:'BELUM',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:28,kategori:'VENDOR',detail:'Janur',status:'LUNAS',plan:600000,dp:300000,kurang:300000,keterangan:'Janur Pontianak'},
+  {id:29,kategori:'VENDOR',detail:'Kursi & Tenda',status:'LUNAS',plan:2200000,dp:800000,kurang:1400000,keterangan:'CV Bella Agra Adiwitya, 200 kursi tanpa sarung'},
+  {id:30,kategori:'VENDOR',detail:'Undangan digital',status:'LUNAS',plan:149000,dp:149000,kurang:0,keterangan:''},
+  {id:31,kategori:'VENDOR',detail:'Mahar Aklirik',status:'LUNAS',plan:500000,dp:50000,kurang:450000,keterangan:'Bengs Mahar - Sudah Diambil'},
+  {id:32,kategori:'VENDOR',detail:'Hand Bouquet',status:'LUNAS',plan:100000,dp:50000,kurang:50000,keterangan:'Pengambilan H-3'},
+  {id:33,kategori:'VENDOR',detail:'Tampak Pokok Telur dkk',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Pengambilan H-2, Pengembalian H+1'},
+  {id:34,kategori:'PENGISI ACARA',detail:'MC',status:'LUNAS',plan:1500000,dp:500000,kurang:1000000,keterangan:'Lulu MC - DP 50% (500rb)'},
+  {id:35,kategori:'PENGISI ACARA',detail:'Band',status:'LUNAS',plan:4500000,dp:700000,kurang:3800000,keterangan:'Seperempat Band - Paket full band - DP 700 rb'},
+  {id:36,kategori:'HANTARAN',detail:'Tempat Tidur',status:'LUNAS',plan:5250000,dp:3000000,kurang:0,keterangan:'Neo Furniture'},
+  {id:37,kategori:'HANTARAN',detail:'Meja Rias',status:'LUNAS',plan:800000,dp:3000000,kurang:0,keterangan:'Neo Furniture'},
+  {id:38,kategori:'HANTARAN',detail:'Lemari',status:'LUNAS',plan:2300000,dp:0,kurang:2300000,keterangan:'Kings Furniture'},
+  {id:39,kategori:'HANTARAN',detail:'Sepatu',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:40,kategori:'HANTARAN',detail:'Body Care',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Kamala'},
+  {id:41,kategori:'HANTARAN',detail:'Prasma (Skin care)',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:42,kategori:'HANTARAN',detail:'Make Up',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Kamala'},
+  {id:43,kategori:'HANTARAN',detail:'Tas',status:'LUNAS',plan:390000,dp:0,kurang:0,keterangan:'Elizabeth'},
+  {id:44,kategori:'HANTARAN',detail:'Handuk Couple',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:45,kategori:'HANTARAN',detail:'Mukena',status:'LUNAS',plan:1500000,dp:0,kurang:0,keterangan:''},
+  {id:46,kategori:'HANTARAN',detail:'Kerudung',status:'LUNAS',plan:1500000,dp:0,kurang:0,keterangan:''},
+  {id:47,kategori:'HANTARAN',detail:'Dalaman',status:'LUNAS',plan:1500000,dp:0,kurang:0,keterangan:''},
+  {id:48,kategori:'HANTARAN',detail:'Al-Qur\'an',status:'LUNAS',plan:144000,dp:0,kurang:0,keterangan:''},
+  {id:49,kategori:'HANTARAN',detail:'Sejadah',status:'LUNAS',plan:220000,dp:0,kurang:0,keterangan:'Sejadah sepasang'},
+  {id:50,kategori:'HANTARAN',detail:'Lingerie',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:51,kategori:'HANTARAN',detail:'Piyama',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:52,kategori:'HANTARAN',detail:'Baju Dress',status:'LUNAS',plan:200000,dp:0,kurang:0,keterangan:''},
+  {id:53,kategori:'HANTARAN',detail:'Bed Cover',status:'LUNAS',plan:350000,dp:0,kurang:0,keterangan:''},
+  {id:54,kategori:'HANTARAN',detail:'Kain Songket Bahan Kebaya',status:'LUNAS',plan:710000,dp:0,kurang:0,keterangan:'Pasar Sudirman'},
+  {id:55,kategori:'HANTARAN',detail:'Payung',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:56,kategori:'HANTARAN',detail:'Baju Gamis',status:'LUNAS',plan:200000,dp:0,kurang:0,keterangan:'TikTok shop'},
+  {id:57,kategori:'HANTARAN',detail:'Kerudung',status:'LUNAS',plan:25000,dp:0,kurang:0,keterangan:'Pegasus hijab'},
+  {id:58,kategori:'HANTARAN',detail:'Tasbih',status:'LUNAS',plan:24000,dp:0,kurang:0,keterangan:'Gramedia'},
+  {id:59,kategori:'HANTARAN',detail:'3 Kain Batik',status:'LUNAS',plan:120000,dp:0,kurang:0,keterangan:'Pasar Kapuas'},
+  {id:60,kategori:'HANTARAN',detail:'Handuk',status:'LUNAS',plan:148500,dp:0,kurang:0,keterangan:'Mitra Anda'},
+  {id:61,kategori:'HANTARAN',detail:'Sarung',status:'LUNAS',plan:123500,dp:0,kurang:0,keterangan:'Mitra Anda'},
+  {id:62,kategori:'HANTARAN',detail:'Sprei 1',status:'LUNAS',plan:150000,dp:0,kurang:0,keterangan:'Nusa Indah'},
+  {id:63,kategori:'HANTARAN',detail:'Parfum',status:'LUNAS',plan:270000,dp:0,kurang:0,keterangan:'Shoope - Zara Parfume 100ml EDT & EDP'},
+  {id:64,kategori:'HANTARAN',detail:'Cincin Lamaran',status:'LUNAS',plan:998000,dp:0,kurang:0,keterangan:''},
+  {id:65,kategori:'HANTARAN',detail:'Baju Couple',status:'LUNAS',plan:260000,dp:0,kurang:0,keterangan:''},
+  {id:66,kategori:'HANTARAN',detail:'Sewa Box Lamaran',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:'Jihan'},
+  {id:67,kategori:'HANTARAN',detail:'Sepatu Lamaran',status:'LUNAS',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:68,kategori:'HANTARAN',detail:'Tas Lamaran',status:'LUNAS',plan:336500,dp:0,kurang:0,keterangan:'beli online di Heylocal'},
+  {id:69,kategori:'LAIN-LAIN',detail:'Amplop Penghulu',status:'BELUM',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:70,kategori:'LAIN-LAIN',detail:'Amplop Wali Hakim',status:'BELUM',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:71,kategori:'LAIN-LAIN',detail:'BP4',status:'LUNAS',plan:100000,dp:0,kurang:0,keterangan:'Mesjid At Kausar (Mufakat)'},
+  {id:72,kategori:'LAIN-LAIN',detail:'Hotel',status:'LUNAS',plan:2940000,dp:0,kurang:0,keterangan:'Ibis Hotel, pembayaran gabung ke WO'},
+  {id:73,kategori:'LAIN-LAIN',detail:'Rental Mobil',status:'LUNAS',plan:2100000,dp:0,kurang:0,keterangan:'2 mobil (1.5jt) + 2 uang makan (300rb)'},
+  {id:74,kategori:'LAIN-LAIN',detail:'Tambahan Cetak Foto',status:'LUNAS',plan:200000,dp:0,kurang:200000,keterangan:'Cetak foto 12 rw di Dimintry'},
+  {id:75,kategori:'LAIN-LAIN',detail:'Sewa Tempat Pertemuan Vendor',status:'LUNAS',plan:502000,dp:0,kurang:0,keterangan:'Asiang Ayani'},
+];
+
+const defaultPrewed = [
+  {id:1,kategori:'VENUE & VENDOR',detail:'Venue',status:'Belum FIX',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:2,kategori:'OUTFIT PREWED',detail:'Outer Pengantin Pria',status:'FIX',plan:282000,dp:0,kurang:0,keterangan:'Matahari - Struk'},
+  {id:3,kategori:'OUTFIT PREWED',detail:'Outer Pengantin Wanita',status:'FIX',plan:78000,dp:0,kurang:0,keterangan:'TikTok shop'},
+  {id:4,kategori:'OUTFIT PREWED',detail:'Kemeja Putih',status:'FIX',plan:282000,dp:0,kurang:0,keterangan:''},
+  {id:5,kategori:'OUTFIT PREWED',detail:'Gaun',status:'FIX',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:6,kategori:'OUTFIT PREWED',detail:'Bagan Celana Hitam',status:'FIX',plan:365000,dp:0,kurang:0,keterangan:'200k(bahan) + 165k jahit'},
+  {id:7,kategori:'OUTFIT PREWED',detail:'Celana Chino',status:'FIX',plan:242000,dp:0,kurang:0,keterangan:''},
+  {id:8,kategori:'OUTFIT PREWED',detail:'Sewa Jas',status:'FIX',plan:150000,dp:100000,kurang:50000,keterangan:''},
+  {id:9,kategori:'OUTFIT PREWED',detail:'Sepatu Putih',status:'FIX',plan:270800,dp:0,kurang:0,keterangan:'Tokopedia - Ventela Republic White Low'},
+  {id:10,kategori:'OUTFIT PREWED',detail:'Jasa Foto',status:'Belum FIX',plan:0,dp:0,kurang:0,keterangan:''},
+  {id:11,kategori:'OUTFIT PREWED',detail:'Inner Putih',status:'FIX',plan:104000,dp:0,kurang:0,keterangan:'Tokopedia - Erigo T-Shirt Oversize Altha Cotton Combed White XL'},
+];
+
+const defaultRundown = [
+  {id:1,jam:'- 06.30',acara:'Pihak mempelai wanita sudah berada di tempat acara.',keterangan:''},
+  {id:2,jam:'07.00 - 07.30',acara:'Pihak mempelai pria dan rombongan turun dari rumah menuju ke tempat acara.',keterangan:''},
+  {id:3,jam:'07.30 - 07.40',acara:'Pihak mempelai pria dan rombongan tiba di tempat acara dengan di iringi oleh TAR.',keterangan:''},
+  {id:4,jam:'07.40 - 07.50',acara:'Pihak mempelai pria dan rombongan menempati tempat yang sudah disediakan.',keterangan:''},
+  {id:5,jam:'07.50 - 08.00',acara:'MC membuka acara',keterangan:''},
+  {id:6,jam:'08.00 - 08.15',acara:'Sambutan dari Pihak Keluarga Pria',keterangan:''},
+  {id:7,jam:'08.15 - 08.30',acara:'Tanggapan dari Pihak Keluarga Wanita',keterangan:''},
+  {id:8,jam:'08.30 - 09.00',acara:'Prosesi Pelangkah',keterangan:''},
+  {id:9,jam:'09.00 - 09.30',acara:'Ijab Qobul',keterangan:''},
+  {id:10,jam:'09.30 - 09.40',acara:'Mempelai pria mencium kening mempelai wanita.',keterangan:''},
+  {id:11,jam:'09.40 - 09.55',acara:'Penyerahan seserahan',keterangan:''},
+  {id:12,jam:'09.55 - 11.30',acara:'Foto - Foto',keterangan:''},
+  {id:13,jam:'09.55 - 11.30',acara:'Makan Siang, Ramah Tamah, Kenalan Saudara',keterangan:''},
+  {id:14,jam:'11.30 - 11.40',acara:'Penutupan oleh MC',keterangan:''},
+];
+
+// ===== STATE =====
+let budgetData = JSON.parse(localStorage.getItem('budgetData')) || defaultBudget;
+let prewedData = JSON.parse(localStorage.getItem('prewedData')) || defaultPrewed;
+let rundownData = JSON.parse(localStorage.getItem('rundownData')) || defaultRundown;
+let currentTab = 'dashboard';
+let chartCategory = null;
+let chartStatus = null;
+
+const formatRp = (n) => 'Rp ' + (n||0).toLocaleString('id-ID');
+
+function saveData() {
+  localStorage.setItem('budgetData', JSON.stringify(budgetData));
+  localStorage.setItem('prewedData', JSON.stringify(prewedData));
+  localStorage.setItem('rundownData', JSON.stringify(rundownData));
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(tab) {
+  currentTab = tab;
+  ['dashboard','budgeting','prewed','rundown'].forEach(t => {
+    const section = document.getElementById('section-'+t);
+    const tabBtn = document.getElementById('tab-'+t);
+    if (t === tab) { section.classList.remove('hidden'); tabBtn.classList.add('active'); }
+    else { section.classList.add('hidden'); tabBtn.classList.remove('active'); }
+  });
+  updateIndicator();
+  if (tab === 'dashboard') renderDashboard();
+  if (tab === 'budgeting') renderBudgetTable();
+  if (tab === 'prewed') renderPrewedTable();
+  if (tab === 'rundown') renderRundown();
+}
+
+function updateIndicator() {
+  const activeTab = document.querySelector('.nav-tab.active');
+  const indicator = document.getElementById('nav-indicator');
+  if (activeTab && indicator) {
+    const wrapper = document.getElementById('nav-tabs');
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const tabRect = activeTab.getBoundingClientRect();
+    indicator.style.width = tabRect.width + 'px';
+    indicator.style.left = (tabRect.left - wrapperRect.left + wrapper.scrollLeft) + 'px';
+  }
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const all = [...budgetData, ...prewedData];
+  const totalBudget = all.reduce((s,i) => s + (i.plan||0), 0);
+  const totalDP = all.reduce((s,i) => s + (i.dp||0), 0);
+  const totalKurang = all.reduce((s,i) => s + (i.kurang||0), 0);
+  const totalLunas = budgetData.filter(i => i.status === 'LUNAS').reduce((s,i) => s + (i.plan||0), 0);
+
+  document.getElementById('sum-budget').textContent = formatRp(totalBudget);
+  document.getElementById('sum-dp').textContent = formatRp(totalDP);
+  document.getElementById('sum-kurang').textContent = formatRp(totalKurang);
+  document.getElementById('sum-lunas').textContent = formatRp(totalLunas);
+
+  const katMap = {};
+  budgetData.forEach(i => { katMap[i.kategori] = (katMap[i.kategori]||0) + (i.plan||0); });
+  const katLabels = Object.keys(katMap);
+  const katValues = Object.values(katMap);
+  const colors = ['#059669','#10b981','#34d399','#6ee7b7','#a7f3d0','#d1fae5'];
+
+  if (chartCategory) chartCategory.destroy();
+  chartCategory = new Chart(document.getElementById('chartCategory'), {
+    type: 'bar',
+    data: { labels: katLabels, datasets: [{ label: 'Budget (Rp)', data: katValues, backgroundColor: colors, borderRadius: 8 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => 'Rp ' + (v/1000000).toFixed(1) + 'jt' } } } }
+  });
+
+  const lunasCount = budgetData.filter(i => i.status === 'LUNAS').length;
+  const belumCount = budgetData.filter(i => i.status !== 'LUNAS').length;
+  if (chartStatus) chartStatus.destroy();
+  chartStatus = new Chart(document.getElementById('chartStatus'), {
+    type: 'doughnut',
+    data: { labels: ['Lunas', 'Belum Lunas'], datasets: [{ data: [lunasCount, belumCount], backgroundColor: ['#059669','#f59e0b'], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+  });
+
+  const katProgress = {};
+  budgetData.forEach(i => {
+    if (!katProgress[i.kategori]) katProgress[i.kategori] = { plan: 0, dp: 0, count: 0, lunas: 0 };
+    katProgress[i.kategori].plan += (i.plan||0);
+    katProgress[i.kategori].dp += (i.dp||0);
+    katProgress[i.kategori].count++;
+    if (i.status === 'LUNAS') katProgress[i.kategori].lunas++;
+  });
+  document.getElementById('kategori-progress').innerHTML = Object.entries(katProgress).map(([kat, v]) => {
+    const pct = v.plan > 0 ? Math.round((v.dp / v.plan) * 100) : 100;
+    return `<div>
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="font-medium text-gray-900">${kat}</span>
+          <span class="text-xs text-gray-500">${v.lunas}/${v.count} lunas</span>
+        </div>
+        <div class="text-right">
+          <span class="text-sm font-semibold text-gray-900">${formatRp(v.dp)}</span>
+          <span class="text-xs text-gray-500"> / ${formatRp(v.plan)} (${pct}%)</span>
+        </div>
+      </div>
+      <div class="w-full bg-gray-100 rounded-full h-2.5">
+        <div class="progress-bar bg-primary-500 h-2.5 rounded-full" style="width: ${Math.min(pct,100)}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('total-items-count').textContent = budgetData.length + ' items';
+
+  const recent = [...budgetData].reverse().slice(0, 6);
+  document.getElementById('recent-items').innerHTML = recent.map(i => `
+    <div class="py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 bg-primary-100 rounded-lg flex items-center justify-center text-primary-600 font-bold text-xs">${i.kategori.substring(0,2)}</div>
+        <div>
+          <p class="font-medium text-gray-900 text-sm">${i.detail}</p>
+          <p class="text-xs text-gray-500">${i.kategori}</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <p class="font-semibold text-gray-900 text-sm">${formatRp(i.plan)}</p>
+        <span class="inline-block px-2 py-0.5 rounded-full text-xs ${i.status==='LUNAS'?'badge-lunas':'badge-belum'}">${i.status}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== BUDGET TABLE =====
+function renderBudgetTable() {
+  const search = document.getElementById('search-budget').value.toLowerCase();
+  const filterKat = document.getElementById('filter-kategori-budget').value;
+  const filterStatus = document.getElementById('filter-status-budget').value;
+  const filtered = budgetData.filter(i => {
+    return (!search || i.detail.toLowerCase().includes(search) || i.keterangan.toLowerCase().includes(search))
+      && (!filterKat || i.kategori === filterKat)
+      && (!filterStatus || i.status === filterStatus);
+  });
+  document.getElementById('budget-table-body').innerHTML = filtered.length === 0 ?
+    `<tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Tidak ada data</td></tr>` :
+    filtered.map((i, idx) => `<tr>
+      <td class="px-4 py-3 text-gray-600">${idx+1}</td>
+      <td class="px-4 py-3"><span class="inline-block px-2 py-1 bg-primary-50 text-primary-700 rounded-md text-xs font-medium">${i.kategori}</span></td>
+      <td class="px-4 py-3 font-medium text-gray-900">${i.detail}</td>
+      <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatRp(i.plan)}</td>
+      <td class="px-4 py-3 text-right text-blue-600">${formatRp(i.dp)}</td>
+      <td class="px-4 py-3 text-right text-amber-600">${formatRp(i.kurang)}</td>
+      <td class="px-4 py-3"><span class="inline-block px-2 py-1 rounded-full text-xs font-medium ${i.status==='LUNAS'?'badge-lunas':'badge-belum'}">${i.status}</span></td>
+      <td class="px-4 py-3 text-xs text-gray-600 max-w-xs truncate" title="${i.keterangan}">${i.keterangan || '-'}</td>
+      <td class="px-4 py-3 text-center">
+        <div class="flex items-center justify-center gap-1">
+          <button onclick="editItem('budget',${i.id})" class="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg" title="Edit">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+          <button onclick="deleteItem('budget',${i.id})" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Hapus">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderPrewedTable() {
+  const search = document.getElementById('search-prewed').value.toLowerCase();
+  const filterKat = document.getElementById('filter-kategori-prewed').value;
+  const filterStatus = document.getElementById('filter-status-prewed').value;
+  const filtered = prewedData.filter(i => {
+    return (!search || i.detail.toLowerCase().includes(search) || i.keterangan.toLowerCase().includes(search))
+      && (!filterKat || i.kategori === filterKat)
+      && (!filterStatus || i.status === filterStatus);
+  });
+  document.getElementById('prewed-table-body').innerHTML = filtered.length === 0 ?
+    `<tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">Tidak ada data</td></tr>` :
+    filtered.map((i, idx) => `<tr>
+      <td class="px-4 py-3 text-gray-600">${idx+1}</td>
+      <td class="px-4 py-3"><span class="inline-block px-2 py-1 bg-primary-50 text-primary-700 rounded-md text-xs font-medium">${i.kategori}</span></td>
+      <td class="px-4 py-3 font-medium text-gray-900">${i.detail}</td>
+      <td class="px-4 py-3"><span class="inline-block px-2 py-1 rounded-full text-xs font-medium ${i.status==='FIX'?'badge-lunas':'badge-belum'}">${i.status}</span></td>
+      <td class="px-4 py-3 text-right font-semibold text-gray-900">${formatRp(i.plan)}</td>
+      <td class="px-4 py-3 text-right text-blue-600">${formatRp(i.dp)}</td>
+      <td class="px-4 py-3 text-right text-amber-600">${formatRp(i.kurang)}</td>
+      <td class="px-4 py-3 text-xs text-gray-600 max-w-xs truncate" title="${i.keterangan}">${i.keterangan || '-'}</td>
+      <td class="px-4 py-3 text-center">
+        <div class="flex items-center justify-center gap-1">
+          <button onclick="editItem('prewed',${i.id})" class="p-1.5 text-primary-600 hover:bg-primary-50 rounded-lg" title="Edit">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+          </button>
+          <button onclick="deleteItem('prewed',${i.id})" class="p-1.5 text-red-600 hover:bg-red-50 rounded-lg" title="Hapus">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ===== RUNDOWN RENDER (WITH CRUD) =====
+function renderRundown() {
+  const list = document.getElementById('rundown-list');
+  const empty = document.getElementById('rundown-empty');
+  const countEl = document.getElementById('rundown-count');
+  
+  countEl.textContent = rundownData.length;
+
+  if (rundownData.length === 0) {
+    list.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  list.innerHTML = rundownData.map((r, idx) => `
+    <div class="timeline-item">
+      <div class="timeline-dot"></div>
+      <div class="rundown-card card p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3 flex-1 min-w-0">
+            <div class="flex-shrink-0">
+              <span class="inline-flex items-center px-2.5 py-1 bg-primary-100 text-primary-700 rounded-lg text-xs font-bold">${r.jam}</span>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-gray-900 font-medium text-sm sm:text-base">${r.acara}</p>
+              ${r.keterangan ? `<p class="text-xs text-gray-500 mt-1">${r.keterangan}</p>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button onclick="editRundownItem(${r.id})" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Edit">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button onclick="deleteRundownItem(${r.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="mt-2 pt-2 border-t border-gray-50 flex items-center gap-2 text-xs text-gray-400">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+          <span>Urutan #${idx + 1}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== RUNDOWN CRUD =====
+function openModalRundown(item = null) {
+  document.getElementById('modal-rundown').classList.remove('hidden');
+  document.getElementById('modal-rundown-title').textContent = item ? 'Edit Acara' : 'Tambah Acara';
+  document.getElementById('rundown-item-id').value = item ? item.id : '';
+
+  if (item) {
+    document.getElementById('rundown-jam').value = item.jam;
+    document.getElementById('rundown-acara').value = item.acara;
+    document.getElementById('rundown-keterangan').value = item.keterangan || '';
+  } else {
+    document.getElementById('rundown-jam').value = '';
+    document.getElementById('rundown-acara').value = '';
+    document.getElementById('rundown-keterangan').value = '';
+  }
+}
+
+function closeModalRundown() {
+  document.getElementById('modal-rundown').classList.add('hidden');
+}
+
+function saveRundownItem(e) {
+  e.preventDefault();
+  const id = document.getElementById('rundown-item-id').value;
+  const data = {
+    id: id ? parseInt(id) : Date.now(),
+    jam: document.getElementById('rundown-jam').value.trim(),
+    acara: document.getElementById('rundown-acara').value.trim(),
+    keterangan: document.getElementById('rundown-keterangan').value.trim(),
+  };
+
+  if (id) {
+    const idx = rundownData.findIndex(i => i.id === parseInt(id));
+    if (idx >= 0) rundownData[idx] = data;
+  } else {
+    rundownData.push(data);
+  }
+
+  saveData();
+  closeModalRundown();
+  renderRundown();
+}
+
+function editRundownItem(id) {
+  const item = rundownData.find(i => i.id === id);
+  if (item) openModalRundown(item);
+}
+
+function deleteRundownItem(id) {
+  const item = rundownData.find(i => i.id === id);
+  if (!item) return;
+  if (!confirm(`Yakin ingin menghapus acara "${item.acara}"?`)) return;
+  rundownData = rundownData.filter(i => i.id !== id);
+  saveData();
+  renderRundown();
+}
+
+function resetRundown() {
+  if (!confirm('Reset rundown ke data awal? Semua perubahan akan hilang.')) return;
+  rundownData = JSON.parse(JSON.stringify(defaultRundown));
+  saveData();
+  renderRundown();
+}
+
+// ===== MODAL BUDGET/PREWED =====
+function openModal(type, item = null) {
+  document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('item-type').value = type;
+  document.getElementById('modal-title').textContent = item ? 'Edit Item' : 'Tambah Item';
+  document.getElementById('item-id').value = item ? item.id : '';
+  const katSelect = document.getElementById('item-kategori');
+  const statusSelect = document.getElementById('item-status');
+  if (type === 'budget') {
+    katSelect.innerHTML = ['VENUE','OUTFIT','VENDOR','PENGISI ACARA','HANTARAN','LAIN-LAIN'].map(k => `<option value="${k}">${k}</option>`).join('');
+    statusSelect.innerHTML = '<option value="LUNAS">LUNAS</option><option value="BELUM">BELUM</option>';
+  } else {
+    katSelect.innerHTML = ['VENUE & VENDOR','OUTFIT PREWED','LAIN-LAIN'].map(k => `<option value="${k}">${k}</option>`).join('');
+    statusSelect.innerHTML = '<option value="FIX">FIX</option><option value="Belum FIX">Belum FIX</option>';
+  }
+  if (item) {
+    document.getElementById('item-kategori').value = item.kategori;
+    document.getElementById('item-detail').value = item.detail;
+    document.getElementById('item-plan').value = item.plan;
+    document.getElementById('item-dp').value = item.dp;
+    document.getElementById('item-kurang').value = item.kurang;
+    document.getElementById('item-status').value = item.status;
+    document.getElementById('item-keterangan').value = item.keterangan;
+  } else {
+    document.getElementById('item-detail').value = '';
+    document.getElementById('item-plan').value = 0;
+    document.getElementById('item-dp').value = 0;
+    document.getElementById('item-kurang').value = 0;
+    document.getElementById('item-keterangan').value = '';
+  }
+}
+
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+
+function saveItem(e) {
+  e.preventDefault();
+  const type = document.getElementById('item-type').value;
+  const id = document.getElementById('item-id').value;
+  const data = {
+    id: id ? parseInt(id) : Date.now(),
+    kategori: document.getElementById('item-kategori').value,
+    detail: document.getElementById('item-detail').value,
+    plan: parseInt(document.getElementById('item-plan').value) || 0,
+    dp: parseInt(document.getElementById('item-dp').value) || 0,
+    kurang: parseInt(document.getElementById('item-kurang').value) || 0,
+    status: document.getElementById('item-status').value,
+    keterangan: document.getElementById('item-keterangan').value,
+  };
+  const arr = type === 'budget' ? budgetData : prewedData;
+  if (id) {
+    const idx = arr.findIndex(i => i.id === parseInt(id));
+    if (idx >= 0) arr[idx] = data;
+  } else { arr.push(data); }
+  saveData();
+  closeModal();
+  if (currentTab === 'budgeting') renderBudgetTable();
+  if (currentTab === 'prewed') renderPrewedTable();
+  if (currentTab === 'dashboard') renderDashboard();
+}
+
+function editItem(type, id) {
+  const arr = type === 'budget' ? budgetData : prewedData;
+  const item = arr.find(i => i.id === id);
+  if (item) openModal(type, item);
+}
+
+function deleteItem(type, id) {
+  if (!confirm('Yakin ingin menghapus item ini?')) return;
+  if (type === 'budget') budgetData = budgetData.filter(i => i.id !== id);
+  else prewedData = prewedData.filter(i => i.id !== id);
+  saveData();
+  if (currentTab === 'budgeting') renderBudgetTable();
+  if (currentTab === 'prewed') renderPrewedTable();
+  if (currentTab === 'dashboard') renderDashboard();
+}
+
+// ===== EXPORT =====
+function exportExcel() {
+  const wb = XLSX.utils.book_new();
+  const budgetRows = [['No','Kategori','Detail','Status','Plan','DP','Kurang','Keterangan']];
+  budgetData.forEach((i,idx) => budgetRows.push([idx+1, i.kategori, i.detail, i.status, i.plan, i.dp, i.kurang, i.keterangan]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(budgetRows), 'Budgeting');
+  const prewedRows = [['No','Kategori','Detail','Status','Plan','DP','Kurang','Keterangan']];
+  prewedData.forEach((i,idx) => prewedRows.push([idx+1, i.kategori, i.detail, i.status, i.plan, i.dp, i.kurang, i.keterangan]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(prewedRows), 'Prewed');
+  const rdRows = [['No','Jam','Acara','Keterangan']];
+  rundownData.forEach((r,idx) => rdRows.push([idx+1, r.jam, r.acara, r.keterangan || '']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rdRows), 'Rundown');
+  XLSX.writeFile(wb, 'Budget-Pernikahan.xlsx');
+}
+
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  doc.setFontSize(18);
+  doc.setTextColor(5, 150, 105);
+  doc.text('Budget Pernikahan', 14, 20);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text('Tanggal: ' + new Date().toLocaleDateString('id-ID'), 14, 28);
+  
+  const totalPlan = budgetData.reduce((s,i) => s + (i.plan||0), 0);
+  const totalDP = budgetData.reduce((s,i) => s + (i.dp||0), 0);
+  const totalKurang = budgetData.reduce((s,i) => s + (i.kurang||0), 0);
+  
+  doc.setFontSize(12);
+  doc.setTextColor(0);
+  doc.text('Total Plan: Rp ' + totalPlan.toLocaleString('id-ID'), 14, 38);
+  doc.text('Total DP: Rp ' + totalDP.toLocaleString('id-ID'), 14, 45);
+  doc.text('Total Kurang: Rp ' + totalKurang.toLocaleString('id-ID'), 14, 52);
+  
+  const body = budgetData.map((i,idx) => [idx+1, i.kategori, i.detail, i.status, formatRp(i.plan), formatRp(i.dp), formatRp(i.kurang)]);
+  doc.autoTable({
+    startY: 59,
+    head: [['No','Kategori','Detail','Status','Plan','DP','Kurang']],
+    body: body,
+    headStyles: { fillColor: [5, 150, 105] },
+    styles: { fontSize: 8 },
+    columnStyles: { 0: {cellWidth: 10}, 4: {halign:'right'}, 5: {halign:'right'}, 6: {halign:'right'} }
+  });
+  
+  // Add Rundown page
+  doc.addPage();
+  doc.setFontSize(16);
+  doc.setTextColor(5, 150, 105);
+  doc.text('Susunan Acara Akad', 14, 20);
+  
+  const rdBody = rundownData.map((r,idx) => [idx+1, r.jam, r.acara]);
+  doc.autoTable({
+    startY: 28,
+    head: [['No','Jam','Acara']],
+    body: rdBody,
+    headStyles: { fillColor: [5, 150, 105] },
+    styles: { fontSize: 9 },
+    columnStyles: { 0: {cellWidth: 12}, 1: {cellWidth: 35} }
+  });
+  
+  doc.save('Budget-Pernikahan.pdf');
+}
+
+// ===== INIT =====
+renderDashboard();
+window.addEventListener('load', () => setTimeout(updateIndicator, 100));
+window.addEventListener('resize', updateIndicator);
+</script>
+</body>
+</html>
